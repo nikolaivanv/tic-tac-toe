@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import styled from 'styled-components'
 import { checkWinner } from '../helpers/checkWinner';
+import { useStickyState } from '../hooks/use-sticky-state';
 
 const Game = () => {
-    const [playerTurns, setPlayerTurns] =  useState<number[]>([])
+    const [playerTurns, setPlayerTurns] =  useStickyState<number[]>('tic-tac-toe:turns',[])
 
     const FieldContainer = styled.div`
         display: grid;
