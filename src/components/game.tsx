@@ -1,23 +1,24 @@
-import styled from 'styled-components'
+import styled from 'styled-components';
+
 import { checkWinner } from '../helpers/checkWinner';
 import { useStickyState } from '../hooks/use-sticky-state';
+import { BoardStateHistory } from '../shared.types';
+import { HistoryControl } from './history-control';
+import { GameProgress } from './game-progress';
+import { Field } from './field';
+import { ResetProgress } from './reset-progress';
 
-type BoardState = string[];
-type BoardStateHistory = BoardState[];
-    
-const FieldContainer = styled.div`
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    width: 300px;
-    height: 300px;
+const GameContainer = styled.div`
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    background-color: black;
 `;
 
-const Cell = styled.div`
-    border: 1px solid black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+const GameTitle = styled.h1`
+    color: white;
 `;
 
 const Game = () => {
@@ -25,11 +26,16 @@ const Game = () => {
     const [currentTurn, setCurrentTurn] = useStickyState<number>('tic-tac-toe:current-turn', 0);
     const currentBoardState = boardStateHistory[currentTurn-1] || Array(9).fill('');
 
+    const { winner, winningLine} = checkWinner(currentBoardState);
 
     const onCellClick = (index: number) => {
         if (currentBoardState[index] !== '') {
             return;
         }
+        if (winner) {
+            return;
+        }
+        
         let newBoardState = [...currentBoardState];
         newBoardState[index] = currentTurn % 2 === 0 ? 'X' : 'O';
         setBoardStateHistory([...boardStateHistory.slice(0, currentTurn), newBoardState]);
@@ -45,47 +51,18 @@ const Game = () => {
         setCurrentTurn(0);
     }
 
-    const winner = checkWinner(currentBoardState);
-
-    // To do: Add a check for a draw
-    // To do: Add styling to show the winning line
-    // To do: Add styling for a board and for other info
-    // To do: Stop game when there is a winner
-    // Put board into a separate component
-    // Put cell into a separate component
-
     return (
-        <div>
-            <h1>Tic Tac Toe</h1>
-            <div>
-                {
-                    boardStateHistory.map((boardState, index) => (
-                        <button onClick={() => goBack(index)}>{index+1}</button>
-                    ))
-                }
-            </div>
-            <div>
-                Turn number: {currentTurn + 1}
-            </div>
-            <div>
-                {winner ? `Winner: ${winner}` : ''}
-                {!winner && (boardStateHistory.length % 2 === 0 ? "X's turn" : "O's turn")}
-
-            </div>
-            <FieldContainer>
-                {currentBoardState.map((value: string, index: number) => {
-                    return (
-                        <Cell 
-                            key={index}
-                            onClick={() => onCellClick(index)}
-                        >
-                            {value}
-                        </Cell>
-                    );
-                })}
-            </FieldContainer>
-            <button onClick={() => onReset()}>Reset</button>
-        </div>
+        <GameContainer>
+            <GameTitle>Tic Tac Toe</GameTitle>
+            <GameProgress currentTurn={currentTurn} winner={winner} />
+            <HistoryControl boardStateHistory={boardStateHistory} goBack={goBack} />
+            <Field
+                currentBoardState={currentBoardState}
+                onCellClick={onCellClick}
+                winningLine={winningLine}
+            />
+            <ResetProgress onReset={onReset}/>
+        </GameContainer>
     );
 };
 
